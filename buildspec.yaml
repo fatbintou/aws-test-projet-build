@@ -1,30 +1,20 @@
-# ------------------------------------------------------------
-# buildspec.yml
-# Pipeline AWS CodeBuild pour projet Python + Pytest
-# ------------------------------------------------------------
-
 version: 0.2
 
 phases:
 
   install:
-    # Installation de Python et des dépendances
     runtime-versions:
       python: 3.8
-
     commands:
       - echo "=== INSTALLATION DES DEPENDANCES ==="
       - pip install --upgrade pip
       - pip install -r requirements.txt
 
   pre_build:
-    # Préparation : création dossier tests si absent
     commands:
       - echo "=== PRE-BUILD ==="
       - mkdir -p reports
       - mkdir -p tests
-
-      # Si aucun fichier de test n'existe, on crée un test placeholder
       - |
         if ! ls tests/test_*.py 1> /dev/null 2>&1; then
           echo "Aucun test trouvé. Création d'un test fictif..."
@@ -32,27 +22,21 @@ phases:
         fi
 
   build:
-    # Exécution des tests Pytest
     commands:
       - echo "=== BUILD : EXECUTION DES TESTS PYTEST ==="
-      # --junitxml => génère un rapport utilisable par CodeBuild
-      # || true => empêche l'échec du build si Pytest renvoie un code ≠ 0
       - pytest --junitxml=reports/results.xml --tb=short || true
 
   post_build:
-    # Fin du build
     commands:
       - echo "=== POST-BUILD ==="
       - echo "Build terminé avec succès."
 
 artifacts:
-  # Fichiers à conserver après le build
   files:
     - "**/*"
   base-directory: .
 
 reports:
-  # Rapport de tests visible dans l’interface AWS CodeBuild
   pytest_reports:
     files:
       - "reports/results.xml"

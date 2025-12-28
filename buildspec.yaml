@@ -1,43 +1,50 @@
-version: 0.2
+# buildspec.yml
+# Fichier de configuration utilisé par AWS CodeBuild
+# Il décrit les différentes étapes du pipeline (install, build, etc.)
+
+version: 0.2   # Version du format buildspec
 
 phases:
-
   install:
+    # Phase d’installation des dépendances et de l’environnement
     runtime-versions:
-      python: 3.8
+      python: 3.8   # Version de Python utilisée pour le build
+
     commands:
-      - echo "=== INSTALLATION DES DEPENDANCES ==="
-      - pip install --upgrade pip
-      - pip install -r requirements.txt
+      - echo Installing dependencies...   # Message affiché dans les logs
+      - pip install -r requirements.txt   # Installation des dépendances Python
 
   pre_build:
+    # Phase exécutée avant le build principal
+    # Souvent utilisée pour des vérifications (lint, sécurité, variables, etc.)
     commands:
-      - echo "=== PRE-BUILD ==="
-      - mkdir -p reports
-      - mkdir -p tests
-      - |
-        if ! ls tests/test_*.py 1> /dev/null 2>&1; then
-          echo "Aucun test trouvé. Création d'un test fictif..."
-          echo "def test_placeholder(): assert True" > tests/test_placeholder.py
-        fi
+      - echo start prebuild and end it     # Simple message (exemple)
 
   build:
+    # Phase principale du build
+    # Ici, on exécute les tests unitaires
     commands:
-      - echo "=== BUILD : EXECUTION DES TESTS PYTEST ==="
-      - pytest --junitxml=reports/results.xml --tb=short || true
+      - echo Running unit tests with pytest...   # Message informatif
+      - pytest --junitxml=reports/results.xml \
+        --tb=short                               # Exécute les tests et génère
+                                                 # un rapport XML exploitable
 
   post_build:
+    # Phase exécutée après le build
+    # Utile pour le nettoyage ou les notifications
     commands:
-      - echo "=== POST-BUILD ==="
-      - echo "Build terminé avec succès."
+      - echo Build completed successfully.       # Message de fin
 
 artifacts:
+  # Fichiers à conserver après le build
   files:
-    - "**/*"
-  base-directory: .
+    - "**/*"             # Inclut tous les fichiers du projet
+  base-directory: .      # Répertoire de base des artifacts
 
 reports:
+  # Déclaration des rapports de tests
+  # Permet à l’outil CI (CodeBuild/Jenkins) d’afficher les résultats
   pytest_reports:
     files:
-      - "reports/results.xml"
-    discard-paths: yes
+      - "reports/results.xml"   # Fichier généré par pytest
+    discard-paths: yes          # Ne conserve pas l’arborescence complète

@@ -1,50 +1,44 @@
+# ============================================================
 # buildspec.yml
-# Fichier de configuration utilisé par AWS CodeBuild
-# Il décrit les différentes étapes du pipeline (install, build, etc.)
+# Fichier de configuration AWS CodeBuild
+# Décrit toutes les étapes nécessaires au build et tests
+# ============================================================
 
-version: 0.2   # Version du format buildspec
+version: 0.2   # Version utilisée du format buildspec
 
 phases:
-  install:
-    # Phase d’installation des dépendances et de l’environnement
+  install:      # Phase d'installation des dépendances
     runtime-versions:
-      python: 3.8   # Version de Python utilisée pour le build
-
+      python: 3.8      # Version de Python fournie par CodeBuild
     commands:
-      - echo Installing dependencies...   # Message affiché dans les logs
-      - pip install -r requirements.txt   # Installation des dépendances Python
+      - echo Installing dependencies...     # Log dans la console CodeBuild
+      - pip install -r requirements.txt     # Installation des dépendances Python
 
-  pre_build:
-    # Phase exécutée avant le build principal
-    # Souvent utilisée pour des vérifications (lint, sécurité, variables, etc.)
+  pre_build:    # Phase exécutée avant le build
     commands:
-      - echo start prebuild and end it     # Simple message (exemple)
+      - echo start prebuild and end it      # Ici rien de spécial, juste un message
 
-  build:
-    # Phase principale du build
-    # Ici, on exécute les tests unitaires
+  build:        # Phase principale du build (tests, compilation, etc.)
     commands:
-      - echo Running unit tests with pytest...   # Message informatif
-      - pytest --junitxml=reports/results.xml \
-        --tb=short                               # Exécute les tests et génère
-                                                 # un rapport XML exploitable
+      - echo Running unit tests with pytest...    # Log explicatif
+      - mkdir -p reports                          # Création du dossier de rapport (important)
+      - |
+        # Exécution des tests avec Pytest
+        # --junitxml : génère un rapport XML compatible CodeBuild
+        # --tb=short  : résumé des traces d'erreur pour une meilleure lisibilité
+        pytest --junitxml=reports/results.xml --tb=short
 
-  post_build:
-    # Phase exécutée après le build
-    # Utile pour le nettoyage ou les notifications
+  post_build:   # Phase exécutée après le build
     commands:
       - echo Build completed successfully.       # Message de fin
 
-artifacts:
-  # Fichiers à conserver après le build
+artifacts:    # Liste des fichiers sauvegardés à la fin du build
   files:
-    - "**/*"             # Inclut tous les fichiers du projet
-  base-directory: .      # Répertoire de base des artifacts
+    - "**/*"               # Inclut tous les fichiers du répertoire du projet
+  base-directory: .        # Racine des artifacts
 
-reports:
-  # Déclaration des rapports de tests
-  # Permet à l’outil CI (CodeBuild/Jenkins) d’afficher les résultats
+reports:      # Déclaration des rapports de tests (visible dans l'onglet "Reports")
   pytest_reports:
     files:
-      - "reports/results.xml"   # Fichier généré par pytest
-    discard-paths: yes          # Ne conserve pas l’arborescence complète
+      - "reports/results.xml"   # Rapport XML généré par pytest
+    discard-paths: yes           # Conserve uniquement les fichiers sans les sous-dossiers
